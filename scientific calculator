@@ -126,19 +126,6 @@ def tangent(angle):
     radians = math.radians(angle)
     return math.tan(radians)
 
-def on_press(backspace):
-    try:
-        if key.char == 'backspace':
-            print("Exiting the calculator.")
-            return False
-    except AttributeError:
-        pass
-def on_press(k):
-    if key.char == 'k':
-        os.system('cls' if os.name == 'nt' else 'clear')
-    
-    
-    
 
         
 
