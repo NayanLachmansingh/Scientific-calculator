@@ -24,77 +24,115 @@ def main():
         num2 = float(input("Enter second number: "))
 
         if choice == '1':
-            result = num1 + num2
-            print(f"The result of addition is: {result}")
+            addition_result = addition(num1, num2)
+            print(f"The result of addition is: {addition_result}")
         elif choice == '2':
-            result = num1 - num2
-            print(f"The result of subtraction is: {result}")
+            subtraction_result = subtraction(num1, num2)
+            print(f"The result of subtraction is: {subtraction_result}")
         elif choice == '3':
-            result = num1 * num2
+            multiplication_result = multiplication(num1, num2)  
             print(f"The result of multiplication is: {result}")
         elif choice == '4':
             if num2 != 0:
-                result = num1 / num2
-                print(f"The result of division is: {result}")
+                division_result = division(num1, num2)
+                print(f"The result of division is: {division_result}")
             else:
                 print("Error: Division by zero is not allowed.")
         elif choice == '5':
-            result = num1 ** num2
-            print(f"The result of exponentiation is: {result}")
+            exponentiation_result = exponentiation(num1, num2)
+            print(f"The result of exponentiation is: {exponentiation_result}")
         elif choice == '6':
             if num1 > 0 and num2 > 0:
-                result = math.log(num1, num2)
-                print(f"The result of logarithm is: {result}")
+                logarithm_result = logarithm(num1, num2)
+                print(f"The result of logarithm is: {logarithm_result}")
             else:
                 print("Error: Logarithm is only defined for positive numbers.")
         elif choice == '7':
             import math
             if num1 >= 0:
-                result = math.sqrt(num1)
+                square_root_result = square_root(num1)
                 print(f"The square root of {num1} is: {result}")
             else:
                 print("Error: Square root is only defined for non-negative numbers.")
         elif choice == '8':
             a = num1
             b = num2
-            c = float(input("Enter the third number (c): "))
-            discriminant = b**2 - 4*a*c
-            if discriminant > 0:
-                root1 = (-b + math.sqrt(discriminant)) / (2*a)
-                root2 = (-b - math.sqrt(discriminant)) / (2*a)
-                print(f"The roots of the quadratic equation are: {root1} and {root2}")
-            elif discriminant == 0:
-                root = -b / (2*a)
-                print(f"The root of the quadratic equation is: {root}")
+            c = float(input("Enter the constant term (c): "))
+            roots = quadratic_solver(a, b, c)
+            if roots is None:
+                print("The equation has no real roots.")
+            elif len(roots) == 1:
+                print(f"The equation has one real root: {roots[0]}")
             else:
-                print("The quadratic equation has no real roots.")
+                print(f"The equation has two real roots: {roots[0]} and {roots[1]}")
         elif choice == '9':
+            angle = float(input("Enter the angle in degrees: "))
             print("Select a trigonometric function:")
             print("1. Sine")
             print("2. Cosine")
             print("3. Tangent")
             trig_choice = input("Enter your choice (1-3): ")
-            angle = float(input("Enter the angle in degrees: "))
-            radians = math.radians(angle)
-
             if trig_choice == '1':
-                result = math.sin(radians)
-                print(f"The sine of {angle} degrees is: {result}")
+                sine_result = sine(angle)
+                print(f"The sine of {angle} degrees is: {sine_result}")
             elif trig_choice == '2':
-                result = math.cos(radians)
-                print(f"The cosine of {angle} degrees is: {result}")
+                cosine_result = cosine(angle)
+                print(f"The cosine of {angle} degrees is: {cosine_result}")
             elif trig_choice == '3':
-                result = math.tan(radians)
-                print(f"The tangent of {angle} degrees is: {result}")
+                tangent_result = tangent(angle)
+                print(f"The tangent of {angle} degrees is: {tangent_result}")
             else:
                 print("Invalid choice for trigonometric function.")
-        else:
-            print("Invalid choice. Please select a valid operation.")
+            
 
         clear_screen = input("Do you want to clear the screen before the next operation? (yes/no): ")
         if clear_screen.lower() == 'yes':
             import os
             os.system('cls' if os.name == 'nt' else 'clear')
+
+def addition(a, b):
+    return a + b
+def subtraction(a, b):
+    return a - b
+def multiplication(a, b):
+    return a * b
+def division(a, b):
+    if b != 0:
+        return a / b
+    else:
+        raise ValueError("Division by zero is not allowed.")
+def exponentiation(a, b):
+    return a ** b
+def logarithm(a, b):
+    if a > 0 and b > 0:
+        return math.log(a, b)
+    else:
+        raise ValueError("Logarithm is only defined for positive numbers.")
+def square_root(a):
+    if a >= 0:
+        return math.sqrt(a)
+    else:
+        raise ValueError("Square root is only defined for non-negative numbers.")
+def quadratic_solver(a, b, c):
+    discriminant = b**2 - 4*a*c
+    if discriminant > 0:
+        root1 = (-b + math.sqrt(discriminant)) / (2*a)
+        root2 = (-b - math.sqrt(discriminant)) / (2*a)
+        return root1, root2
+    elif discriminant == 0:
+        root = -b / (2*a)
+        return root,
+    else:
+        return None
+def sine(angle):
+    radians = math.radians(angle)
+    return math.sin(radians)
+def cosine(angle):
+    radians = math.radians(angle)
+    return math.cos(radians)
+def tangent(angle):
+    radians = math.radians(angle)
+    return math.tan(radians)
 
 if __name__ == "__main__":
     main()
