@@ -1,95 +1,87 @@
 import math
+import os
+import ast
+import operator
+def calculate(node):
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return node.value
+
+    if isinstance(node, ast.BinOp):
+        left = calculate(node.left)
+        right = calculate(node.right)
+
+        if isinstance(node.op, ast.Add):
+            return left + right
+        if isinstance(node.op, ast.Sub):
+            return left - right
+        if isinstance(node.op, ast.Mult):
+            return left * right
+        if isinstance(node.op, ast.Div):
+            if right == 0:
+                raise ValueError("Division by zero is not allowed.")
+            return left / right
+        if isinstance(node.op, ast.Pow):
+            return left ** right
+
+    if isinstance(node, ast.UnaryOp):
+        value = calculate(node.operand)
+
+        if isinstance(node.op, ast.UAdd):
+            return +value
+        if isinstance(node.op, ast.USub):
+            return -value
+
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+        name = node.func.id
+        if node.keywords:
+            raise ValueError("That function is not available.")
+
+        supported_functions = {
+            "addition": addition,
+            "subtraction": subtraction,
+            "multiplication": multiplication,
+            "division": division,
+            "exponentiation": exponentiation,
+            "logarithm": logarithm,
+            "square_root": square_root,
+            "quadratic_solver": quadratic_solver,
+            "sine": sine,
+            "cosine": cosine,
+            "tangent": tangent,
+        }
+
+        if name not in supported_functions:
+            raise ValueError("That function is not available.")
+
+        args = [calculate(arg) for arg in node.args]
+        return supported_functions[name](*args)
+
+    raise ValueError("Please enter a valid calculation.")
+
+
 def main():
     print("Welcome to the Scientific Calculator!")
+    print("Use +, -, *, /, ^ and functions like sine(30) or square_root(9).")
+    print("Type 'quit' to exit.")
+
     while True:
-        print("\nSelect an operation:")
-        print("1. Addition")
-        print("2. Subtraction")
-        print("3. Multiplication")
-        print("4. Division")
-        print("5. Exponentiation")
-        print("6. Logarithms")
-        print("7. Square root")
-        print("8. Quadratic Equation Solver")
-        print("9. Trigonometric Functions")
-        print("10. exit")
+        choice = input("Enter a calculation: ").strip()
 
-        choice = input("Enter your choice (1-10): ")
-
-        if choice == '10':
-            print("Exiting the calculator. Goodbye!")
+        if choice.lower() == "quit":
             break
 
-        num1 = float(input("Enter first number: "))
-        num2 = float(input("Enter second number: "))
+        try:
+            # Convert ^ to Python's exponent operator.
+            expression = choice.replace("^", "**")
+            tree = ast.parse(expression, mode="eval")
+            result = calculate(tree.body)
+            print(f"Result: {result}")
+        except (SyntaxError, ValueError, TypeError, ZeroDivisionError) as error:
+            print(f"Could not calculate that: {error}")
+        
 
-        if choice == '1':
-            addition_result = addition(num1, num2)
-            print(f"The result of addition is: {addition_result}")
-        elif choice == '2':
-            subtraction_result = subtraction(num1, num2)
-            print(f"The result of subtraction is: {subtraction_result}")
-        elif choice == '3':
-            multiplication_result = multiplication(num1, num2)  
-            print(f"The result of multiplication is: {result}")
-        elif choice == '4':
-            if num2 != 0:
-                division_result = division(num1, num2)
-                print(f"The result of division is: {division_result}")
-            else:
-                print("Error: Division by zero is not allowed.")
-        elif choice == '5':
-            exponentiation_result = exponentiation(num1, num2)
-            print(f"The result of exponentiation is: {exponentiation_result}")
-        elif choice == '6':
-            if num1 > 0 and num2 > 0:
-                logarithm_result = logarithm(num1, num2)
-                print(f"The result of logarithm is: {logarithm_result}")
-            else:
-                print("Error: Logarithm is only defined for positive numbers.")
-        elif choice == '7':
-            import math
-            if num1 >= 0:
-                square_root_result = square_root(num1)
-                print(f"The square root of {num1} is: {result}")
-            else:
-                print("Error: Square root is only defined for non-negative numbers.")
-        elif choice == '8':
-            a = num1
-            b = num2
-            c = float(input("Enter the constant term (c): "))
-            roots = quadratic_solver(a, b, c)
-            if roots is None:
-                print("The equation has no real roots.")
-            elif len(roots) == 1:
-                print(f"The equation has one real root: {roots[0]}")
-            else:
-                print(f"The equation has two real roots: {roots[0]} and {roots[1]}")
-        elif choice == '9':
-            angle = float(input("Enter the angle in degrees: "))
-            print("Select a trigonometric function:")
-            print("1. Sine")
-            print("2. Cosine")
-            print("3. Tangent")
-            trig_choice = input("Enter your choice (1-3): ")
-            if trig_choice == '1':
-                sine_result = sine(angle)
-                print(f"The sine of {angle} degrees is: {sine_result}")
-            elif trig_choice == '2':
-                cosine_result = cosine(angle)
-                print(f"The cosine of {angle} degrees is: {cosine_result}")
-            elif trig_choice == '3':
-                tangent_result = tangent(angle)
-                print(f"The tangent of {angle} degrees is: {tangent_result}")
-            else:
-                print("Invalid choice for trigonometric function.")
-            
-
-        clear_screen = input("Do you want to clear the screen before the next operation? (yes/no): ")
-        if clear_screen.lower() == 'yes':
-            import os
-            os.system('cls' if os.name == 'nt' else 'clear')
-
+         
+    
 def addition(a, b):
     return a + b
 def subtraction(a, b):
@@ -133,6 +125,25 @@ def cosine(angle):
 def tangent(angle):
     radians = math.radians(angle)
     return math.tan(radians)
+
+def on_press(backspace):
+    try:
+        if key.char == 'backspace':
+            print("Exiting the calculator.")
+            return False
+    except AttributeError:
+        pass
+def on_press(k):
+    if key.char == 'k':
+        os.system('cls' if os.name == 'nt' else 'clear')
+    
+    
+    
+
+        
+
+
+
 
 if __name__ == "__main__":
     main()
