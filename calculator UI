@@ -1,0 +1,49 @@
+from PIL import Image, ImageDraw, ImageFont
+
+WIDTH, HEIGHT = 360, 560
+image = Image.new("RGB", (WIDTH, HEIGHT), "#eef1f5")
+draw = ImageDraw.Draw(image)
+
+
+draw.rounded_rectangle((30, 25, 330, 535), radius=24, fill="#202938")
+draw.rounded_rectangle((50, 50, 310, 165), radius=14, fill="#f8fafc")
+
+try:
+	font = ImageFont.truetype("arial.ttf", 28)
+	small_font = ImageFont.truetype("arial.ttf", 18)
+except OSError:
+	font = ImageFont.load_default()
+	small_font = font
+
+draw.text((70, 75), "BASIC CALCULATOR", fill="#64748b", font=small_font)
+draw.text((70, 112), "0", fill="#172033", font=font)
+
+buttons = [
+	["C", "±", "%", "÷"],
+	["7", "8", "9", "×"],
+	["4", "5", "6", "−"],
+	["1", "2", "3", "+"],
+	["⌫", "0", ".", "="],
+]
+button_colors = {"÷": "#5268e8", "×": "#5268e8", "−": "#5268e8",
+				 "+": "#5268e8", "=": "#18a879"}
+
+button_w, button_h = 56, 58
+gap_x, gap_y = 8, 9
+start_x, start_y = 50, 184
+
+for row, values in enumerate(buttons):
+	for col, label in enumerate(values):
+		x = start_x + col * (button_w + gap_x)
+		y = start_y + row * (button_h + gap_y)
+		color = button_colors.get(label, "#344154")
+		draw.rounded_rectangle((x, y, x + button_w, y + button_h),
+							   radius=10, fill=color)
+		box = draw.textbbox((0, 0), label, font=font)
+		text_w, text_h = box[2] - box[0], box[3] - box[1]
+		draw.text((x + (button_w - text_w) / 2,
+				   y + (button_h - text_h) / 2 - 3),
+				  label, fill="white", font=font)
+
+image.save("calculator_ui.png")
+image.show()
