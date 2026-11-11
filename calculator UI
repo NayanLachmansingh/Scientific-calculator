@@ -1,64 +1,82 @@
-from PIL import Image, ImageDraw, ImageFont
+import tkinter as tk
 
-WIDTH, HEIGHT = 420, 780
-image = Image.new("RGB", (WIDTH, HEIGHT), "#eef1f5")
-draw = ImageDraw.Draw(image)
+root = tk.Tk()
+root.title("Calculator")
+root.geometry("420x780")
+root.resizable(False, False)
+root.configure(bg="#eef1f5")
 
-draw.rounded_rectangle((30, 25, 390, 755), radius=24, fill="#202938")
-draw.rounded_rectangle((50, 50, 370, 158), radius=14, fill="#f8fafc")
+panel = tk.Frame(root, bg="#202938", padx=20, pady=25)
+panel.pack(padx=30, pady=25, fill="both", expand=True)
 
-try:
-	font = ImageFont.truetype("arial.ttf", 24)
-	small_font = ImageFont.truetype("arial.ttf", 16)
-	button_font = ImageFont.truetype("arial.ttf", 21)
-except OSError:
-	font = ImageFont.load_default()
-	small_font = font
-	button_font = font
+display = tk.Frame(panel, bg="#f8fafc", height=108)
+display.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 60))
+display.pack_propagate(False)
 
-draw.text((70, 66), "CALCULATOR", fill="#64748b", font=small_font)
-draw.text((70, 104), "0", fill="#172033", font=font)
+tk.Label(display, text="CALCULATOR", bg="#f8fafc", fg="#64748b",
+         font=("Arial", 16), anchor="w").pack(fill="x", padx=20, pady=(14, 0))
+tk.Label(display, text="0", bg="#f8fafc", fg="#172033",
+         font=("Arial", 24), anchor="w").pack(fill="x", padx=20, pady=8)
 
 basic_buttons = [
-	["C", "±", "%", "÷"],
-	["7", "8", "9", "×"],
-	["4", "5", "6", "−"],
-	["1", "2", "3", "+"],
-	["DEL", "0", ".", "="],
+    ["C", "±", "%", "÷"],
+    ["7", "8", "9", "×"],
+    ["4", "5", "6", "−"],
+    ["1", "2", "3", "+"],
+    ["DEL", "0", ".", "="],
 ]
-button_colors = {"÷": "#5268e8", "×": "#5268e8", "−": "#5268e8",
-				 "+": "#5268e8", "=": "#18a879"}
-button_w, gap_x, gap_y = 74, 8, 7
-start_x = 50
-
-def draw_buttons(rows, start_y, button_h, default_color, text_font):
-	for row, labels in enumerate(rows):
-		for col, label in enumerate(labels):
-			x = start_x + col * (button_w + gap_x)
-			y = start_y + row * (button_h + gap_y)
-			color = button_colors.get(label, default_color)
-			draw.rounded_rectangle((x, y, x + button_w, y + button_h),
-								   radius=10, fill=color)
-			box = draw.textbbox((0, 0), label, font=text_font)
-			text_w = box[2] - box[0]
-			text_h = box[3] - box[1]
-			draw.text((x + (button_w - text_w) / 2,
-					   y + (button_h - text_h) / 2 - 2),
-					  label, fill="white", font=text_font)
-
-draw_buttons(basic_buttons, 218, 50, "#344154", button_font)
-
-draw.rounded_rectangle((50, 510, 370, 551), radius=10, fill="#344154")
-draw.text((68, 521), "SCIENTIFIC FUNCTIONS", fill="#e2e8f0",
-		  font=small_font)
-draw.polygon([(346, 535), (356, 525), (366, 535)], fill="#a5b4fc")
 
 scientific_buttons = [
-	["sin", "cos", "tan", "log"],
-	["ln", "√", "x²", "xʸ"],
-	["π", "(", ")", "!"],
+    ["sin", "cos", "tan", "log"],
+    ["ln", "√", "x²", "xʸ"],
+    ["π", "(", ")", "!"],
 ]
-draw_buttons(scientific_buttons, 560, 47, "#46546b", small_font)
 
-image.save("calculator_ui.png")
-image.show()
+operator_color = "#5268e8"
+basic_color = "#344154"
+scientific_color = "#46546b"
+hover_color = "#7588ff"
+
+
+def add_buttons(rows, start_row, color, font_size):
+    for row, labels in enumerate(rows):
+        for column, label in enumerate(labels):
+            button_color = "#18a879" if label == "=" else color
+            if label in ["÷", "×", "−", "+"]:
+                button_color = operator_color
+
+            button = tk.Button(
+                panel,
+                text=label,
+                bg=button_color,
+                fg="white",
+                activebackground=hover_color,
+                activeforeground="white",
+                font=("Arial", font_size),
+                relief="flat",
+                borderwidth=0,
+            )
+            button.grid(row=start_row + row, column=column,
+                        padx=4, pady=3, sticky="nsew", ipady=8)
+            button.bind(
+                "<Enter>",
+                lambda event, item=button: item.configure(bg=hover_color),
+            )
+            button.bind(
+                "<Leave>",
+                lambda event, item=button, base=button_color:
+                    item.configure(bg=base),
+            )
+
+for column in range(4):
+    panel.grid_columnconfigure(column, weight=1)
+
+tk.Label(panel, text="SCIENTIFIC FUNCTIONS", bg="#344154", fg="#e2e8f0",
+         font=("Arial", 14), anchor="w", padx=16, pady=10).grid(
+             row=6, column=0, columnspan=4, sticky="ew", pady=(10, 4)
+         )
+
+add_buttons(basic_buttons, 1, basic_color, 18)
+add_buttons(scientific_buttons, 7, scientific_color, 14)
+
+root.mainloop()
