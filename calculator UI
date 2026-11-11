@@ -1,49 +1,64 @@
 from PIL import Image, ImageDraw, ImageFont
 
-WIDTH, HEIGHT = 360, 560
+WIDTH, HEIGHT = 420, 780
 image = Image.new("RGB", (WIDTH, HEIGHT), "#eef1f5")
 draw = ImageDraw.Draw(image)
 
-
-draw.rounded_rectangle((30, 25, 330, 535), radius=24, fill="#202938")
-draw.rounded_rectangle((50, 50, 310, 165), radius=14, fill="#f8fafc")
+draw.rounded_rectangle((30, 25, 390, 755), radius=24, fill="#202938")
+draw.rounded_rectangle((50, 50, 370, 158), radius=14, fill="#f8fafc")
 
 try:
-	font = ImageFont.truetype("arial.ttf", 28)
-	small_font = ImageFont.truetype("arial.ttf", 18)
+	font = ImageFont.truetype("arial.ttf", 24)
+	small_font = ImageFont.truetype("arial.ttf", 16)
+	button_font = ImageFont.truetype("arial.ttf", 21)
 except OSError:
 	font = ImageFont.load_default()
 	small_font = font
+	button_font = font
 
-draw.text((70, 75), "BASIC CALCULATOR", fill="#64748b", font=small_font)
-draw.text((70, 112), "0", fill="#172033", font=font)
+draw.text((70, 66), "CALCULATOR", fill="#64748b", font=small_font)
+draw.text((70, 104), "0", fill="#172033", font=font)
 
-buttons = [
+basic_buttons = [
 	["C", "±", "%", "÷"],
 	["7", "8", "9", "×"],
 	["4", "5", "6", "−"],
 	["1", "2", "3", "+"],
-	["⌫", "0", ".", "="],
+	["DEL", "0", ".", "="],
 ]
 button_colors = {"÷": "#5268e8", "×": "#5268e8", "−": "#5268e8",
 				 "+": "#5268e8", "=": "#18a879"}
+button_w, gap_x, gap_y = 74, 8, 7
+start_x = 50
 
-button_w, button_h = 56, 58
-gap_x, gap_y = 8, 9
-start_x, start_y = 50, 184
+def draw_buttons(rows, start_y, button_h, default_color, text_font):
+	for row, labels in enumerate(rows):
+		for col, label in enumerate(labels):
+			x = start_x + col * (button_w + gap_x)
+			y = start_y + row * (button_h + gap_y)
+			color = button_colors.get(label, default_color)
+			draw.rounded_rectangle((x, y, x + button_w, y + button_h),
+								   radius=10, fill=color)
+			box = draw.textbbox((0, 0), label, font=text_font)
+			text_w = box[2] - box[0]
+			text_h = box[3] - box[1]
+			draw.text((x + (button_w - text_w) / 2,
+					   y + (button_h - text_h) / 2 - 2),
+					  label, fill="white", font=text_font)
 
-for row, values in enumerate(buttons):
-	for col, label in enumerate(values):
-		x = start_x + col * (button_w + gap_x)
-		y = start_y + row * (button_h + gap_y)
-		color = button_colors.get(label, "#344154")
-		draw.rounded_rectangle((x, y, x + button_w, y + button_h),
-							   radius=10, fill=color)
-		box = draw.textbbox((0, 0), label, font=font)
-		text_w, text_h = box[2] - box[0], box[3] - box[1]
-		draw.text((x + (button_w - text_w) / 2,
-				   y + (button_h - text_h) / 2 - 3),
-				  label, fill="white", font=font)
+draw_buttons(basic_buttons, 218, 50, "#344154", button_font)
+
+draw.rounded_rectangle((50, 510, 370, 551), radius=10, fill="#344154")
+draw.text((68, 521), "SCIENTIFIC FUNCTIONS", fill="#e2e8f0",
+		  font=small_font)
+draw.polygon([(346, 535), (356, 525), (366, 535)], fill="#a5b4fc")
+
+scientific_buttons = [
+	["sin", "cos", "tan", "log"],
+	["ln", "√", "x²", "xʸ"],
+	["π", "(", ")", "!"],
+]
+draw_buttons(scientific_buttons, 560, 47, "#46546b", small_font)
 
 image.save("calculator_ui.png")
 image.show()
