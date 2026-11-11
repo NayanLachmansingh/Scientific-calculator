@@ -2,21 +2,24 @@ import tkinter as tk
 
 root = tk.Tk()
 root.title("Calculator")
-root.geometry("420x780")
+root.geometry("460x800")
 root.resizable(False, False)
 root.configure(bg="#eef1f5")
 
-panel = tk.Frame(root, bg="#202938", padx=20, pady=25)
-panel.pack(padx=30, pady=25, fill="both", expand=True)
+panel = tk.Frame(root, bg="#202938", padx=20, pady=20)
+panel.pack(padx=25, pady=20, fill="both", expand=True)
 
 display = tk.Frame(panel, bg="#f8fafc", height=108)
-display.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 60))
+display.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 18))
 display.pack_propagate(False)
 
-tk.Label(display, text="CALCULATOR", bg="#f8fafc", fg="#64748b",
-         font=("Arial", 16), anchor="w").pack(fill="x", padx=20, pady=(14, 0))
-tk.Label(display, text="0", bg="#f8fafc", fg="#172033",
-         font=("Arial", 24), anchor="w").pack(fill="x", padx=20, pady=8)
+title = tk.Label(display, text="CALCULATOR", bg="#f8fafc", fg="#64748b",
+                 font=("Arial", 16), anchor="w")
+title.pack(fill="x", padx=20, pady=(14, 0))
+
+result = tk.Label(display, text="0", bg="#f8fafc", fg="#172033",
+                  font=("Arial", 24), anchor="w")
+result.pack(fill="x", padx=20, pady=8)
 
 basic_buttons = [
     ["C", "±", "%", "÷"],
@@ -38,45 +41,101 @@ scientific_color = "#46546b"
 hover_color = "#7588ff"
 
 
-def add_buttons(rows, start_row, color, font_size):
-    for row, labels in enumerate(rows):
-        for column, label in enumerate(labels):
-            button_color = "#18a879" if label == "=" else color
-            if label in ["÷", "×", "−", "+"]:
-                button_color = operator_color
+def highlight_button(event):
+    event.widget.configure(bg=hover_color)
 
-            button = tk.Button(
-                panel,
-                text=label,
-                bg=button_color,
-                fg="white",
-                activebackground=hover_color,
-                activeforeground="white",
-                font=("Arial", font_size),
-                relief="flat",
-                borderwidth=0,
-            )
-            button.grid(row=start_row + row, column=column,
-                        padx=4, pady=3, sticky="nsew", ipady=8)
-            button.bind(
-                "<Enter>",
-                lambda event, item=button: item.configure(bg=hover_color),
-            )
-            button.bind(
-                "<Leave>",
-                lambda event, item=button, base=button_color:
-                    item.configure(bg=base),
-            )
+
+def restore_button_color(event):
+    button = event.widget
+    button.configure(bg=button.original_color, fg=button.original_text_color)
+
 
 for column in range(4):
     panel.grid_columnconfigure(column, weight=1)
 
-tk.Label(panel, text="SCIENTIFIC FUNCTIONS", bg="#344154", fg="#e2e8f0",
-         font=("Arial", 14), anchor="w", padx=16, pady=10).grid(
-             row=6, column=0, columnspan=4, sticky="ew", pady=(10, 4)
-         )
+for row in range(len(basic_buttons)):
+    for column in range(4):
+        label = basic_buttons[row][column]
+        color = basic_color
 
-add_buttons(basic_buttons, 1, basic_color, 18)
-add_buttons(scientific_buttons, 7, scientific_color, 14)
+        if label == "=":
+            color = "#18a879"
+        elif label in ["÷", "×", "−", "+"]:
+            color = operator_color
+
+        button = tk.Button(
+            panel,
+            text=label,
+            bg=color,
+            fg="white",
+            activebackground=hover_color,
+            activeforeground="white",
+            font=("Arial", 18),
+            relief="flat",
+            borderwidth=0,
+        )
+        button.grid(row=row + 1, column=column, padx=4, pady=3,
+                    sticky="nsew", ipady=8)
+        button.original_color = color
+        button.original_text_color = "white"
+        button.bind("<Enter>", highlight_button)
+        button.bind("<Leave>", restore_button_color)
+
+scientific_frame = tk.Frame(panel, bg="#202938")
+for column in range(4):
+    scientific_frame.grid_columnconfigure(column, weight=1)
+
+for row in range(len(scientific_buttons)):
+    for column in range(4):
+        label = scientific_buttons[row][column]
+
+        button = tk.Button(
+            scientific_frame,
+            text=label,
+            bg=scientific_color,
+            fg="white",
+            activebackground=hover_color,
+            activeforeground="white",
+            font=("Arial", 14),
+            relief="flat",
+            borderwidth=0,
+        )
+        button.grid(row=row, column=column, padx=4, pady=3,
+                    sticky="nsew", ipady=8)
+        button.original_color = scientific_color
+        button.original_text_color = "white"
+        button.bind("<Enter>", highlight_button)
+        button.bind("<Leave>", restore_button_color)
+
+
+def toggle_scientific():
+    if scientific_frame.winfo_manager():
+        scientific_frame.grid_remove()
+        scientific_menu.configure(text="Scientific functions  ▾")
+    else:
+        scientific_frame.grid(row=7, column=0, columnspan=4, sticky="ew")
+        scientific_menu.configure(text="Scientific functions  ▴")
+
+
+scientific_menu = tk.Button(
+    panel,
+    text="Scientific functions  ▾",
+    command=toggle_scientific,
+    bg="#344154",
+    fg="#e2e8f0",
+    activebackground=hover_color,
+    activeforeground="white",
+    font=("Arial", 14),
+    anchor="w",
+    padx=16,
+    relief="flat",
+    borderwidth=0,
+)
+scientific_menu.grid(row=6, column=0, columnspan=4,
+                     sticky="ew", pady=(10, 4), ipady=7)
+scientific_menu.original_color = "#344154"
+scientific_menu.original_text_color = "#e2e8f0"
+scientific_menu.bind("<Enter>", highlight_button)
+scientific_menu.bind("<Leave>", restore_button_color)
 
 root.mainloop()
