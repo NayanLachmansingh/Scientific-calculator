@@ -14,7 +14,7 @@ screen_expression = tk.StringVar(value="0")
 screen_result = tk.StringVar(value="")
 angle_mode = tk.StringVar(value="DEG")
 history = []
-memory = {"value": 0, "answer": None}
+last_answer = None
 
 BASIC_BUTTONS = [
     ["C", "±", "%", "÷"], ["7", "8", "9", "×"],
@@ -23,16 +23,10 @@ BASIC_BUTTONS = [
 ]
 SCIENTIFIC_BUTTONS = [
     ["sin", "cos", "tan", "sin⁻¹"],
-    ["cos⁻¹", "tan⁻¹", "sinh", "cosh"],
-    ["tanh", "asinh", "acosh", "atanh"],
-    ["log", "ln", "log₂", "eˣ"],
-    ["10ˣ", "√", "∛", "x²"],
-    ["xʸ", "1/x", "abs", "!"],
-    ["%", "quad", "floor", "ceil"],
-    ["π", "e", "mod", "("],
-    [")", "MC", "MR", "M+"],
-    ["M−", "Ans", "nCr", "nPr"],
-    [",", "rand", "round"],
+    ["cos⁻¹", "tan⁻¹", "log", "ln"],
+    ["√", "x²", "xʸ", "1/x"],
+    ["π", "e", "(", ")"],
+    ["!", "abs", "Ans", "DEG/RAD"],
 ]
 
 COLORS = {"panel": "#202938", "button": "#344154", "scientific": "#46546b",
@@ -41,17 +35,9 @@ KEYS = {
     "÷": ("/", "÷"), "×": ("*", "×"), "−": ("-", "−"),
     "sin": ("sin(", "sin("), "cos": ("cos(", "cos("), "tan": ("tan(", "tan("),
     "sin⁻¹": ("asin(", "sin⁻¹("), "cos⁻¹": ("acos(", "cos⁻¹("),
-    "tan⁻¹": ("atan(", "tan⁻¹("), "sinh": ("sinh(", "sinh("),
-    "cosh": ("cosh(", "cosh("), "tanh": ("tanh(", "tanh("),
-    "asinh": ("asinh(", "asinh("), "acosh": ("acosh(", "acosh("),
-    "atanh": ("atanh(", "atanh("), "log": ("log10(", "log("),
-    "ln": ("log(", "ln("), "log₂": ("log2(", "log₂("),
-    "eˣ": ("exp(", "e^("), "10ˣ": ("pow10(", "10^("),
-    "√": ("sqrt(", "√("), "∛": ("cbrt(", "∛("),
-    "abs": ("abs(", "abs("), "floor": ("floor(", "floor("),
-    "ceil": ("ceil(", "ceil("), "quad": ("quadratic_solver(", "quad("),
-    "π": ("pi", "π"), "e": ("e", "e"), "mod": ("%", "mod"),
-    "rand": ("random(", "rand("), "round": ("round(", "round("),
+    "tan⁻¹": ("atan(", "tan⁻¹("), "log": ("log10(", "log("),
+    "ln": ("log(", "ln("), "√": ("sqrt(", "√("),
+    "abs": ("abs(", "abs("), "π": ("pi", "π"), "e": ("e", "e"),
 }
 
 panel = tk.Frame(root, bg=COLORS["panel"], padx=12, pady=10)
@@ -148,6 +134,8 @@ def format_result(value):
 
 
 def show_button_press(label):
+    global last_answer
+
     current, shown = equation.get(), screen_expression.get()
     if not current:
         shown = ""
@@ -162,32 +150,20 @@ def show_button_press(label):
     elif label == "=":
         if current:
             try:
-                memory["answer"] = calculate(current, angle_mode.get())
-                screen_result.set("= " + format_result(memory["answer"]))
+                last_answer = calculate(current, angle_mode.get())
+                screen_result.set("= " + format_result(last_answer))
             except (ArithmeticError, SyntaxError, TypeError, ValueError) as error:
                 screen_result.set(str(error))
-    elif label == "MC":
-        memory["value"] = 0
-        screen_result.set("Memory cleared")
-    elif label in ("MR", "Ans"):
-        value = memory["value"] if label == "MR" else memory["answer"]
-        if value is None:
+    elif label == "Ans":
+        if last_answer is None:
             screen_result.set("No stored answer yet.")
         else:
             history.append((current, shown))
-            token = format_result(value)
+            token = format_result(last_answer)
             if has_value(current):
                 current, shown = current + "*", shown + "×"
             current, shown = current + token, shown + token
             screen_result.set("")
-    elif label in ("M+", "M−"):
-        if current:
-            try:
-                value = calculate(current, angle_mode.get())
-                memory["value"] += value if label == "M+" else -value
-                screen_result.set("M = " + format_result(memory["value"]))
-            except (ArithmeticError, SyntaxError, TypeError, ValueError) as error:
-                screen_result.set(str(error))
     else:
         history.append((current, shown))
         screen_result.set("")
@@ -208,9 +184,6 @@ def show_button_press(label):
             if has_value(current):
                 current, shown = replace_last(current, shown, "percent", "")
                 shown += "%"
-        elif label in ("nCr", "nPr"):
-            function = "combination" if label == "nCr" else "permutation"
-            current, shown = replace_last(current, shown, function, label, close=False)
         else:
             value, symbol = KEYS.get(label, (label, label))
             start = operand_start(current)
@@ -228,16 +201,18 @@ def show_button_press(label):
 
 
 def make_button(parent, label, color, size, row, column):
+    command = toggle_angle if label == "DEG/RAD" else lambda: show_button_press(label)
     button = tk.Button(
-        parent, text=label, command=lambda value=label: show_button_press(value),
+        parent, text=label, command=command,
         bg=color, fg="white", activebackground=COLORS["hover"],
         activeforeground="white", font=("Arial", size), relief="flat",
         borderwidth=0,
     )
-    button.grid(row=row, column=column, padx=2, pady=1, sticky="nsew", ipady=2)
+    button.grid(row=row, column=column, padx=3, pady=3, sticky="nsew", ipady=6)
     button.original_color = color
     button.bind("<Enter>", lambda event: event.widget.configure(bg=COLORS["hover"]))
     button.bind("<Leave>", lambda event, original=color: event.widget.configure(bg=original))
+    return button
 
 
 def toggle_angle():
@@ -247,22 +222,23 @@ def toggle_angle():
 
 for column in range(4):
     panel.grid_columnconfigure(column, weight=1)
-for row in (*range(1, 6), *range(7, 18)):
+for row in (*range(1, 6), *range(7, 12)):
     panel.grid_rowconfigure(row, weight=1)
 for row, labels in enumerate(BASIC_BUTTONS, start=1):
     for column, label in enumerate(labels):
         color = "#18a879" if label == "=" else COLORS["operator"] if label in "÷×−+" else COLORS["button"]
-        make_button(panel, label, color, 15, row, column)
+        make_button(panel, label, color, 17, row, column)
 
 tk.Label(panel, text="SCIENTIFIC FUNCTIONS", bg=COLORS["panel"], fg="#e2e8f0",
          font=("Arial", 13), anchor="w").grid(
-             row=6, column=0, columnspan=3, sticky="ew", pady=(10, 4))
-angle_button = tk.Button(panel, text=angle_mode.get(), command=toggle_angle,
-                         bg=COLORS["operator"], fg="white", relief="flat")
-angle_button.grid(row=6, column=3, sticky="ew", padx=4, pady=(10, 4))
+             row=6, column=0, columnspan=4, sticky="ew", pady=(8, 4))
 
+angle_button = None
 for row, labels in enumerate(SCIENTIFIC_BUTTONS, start=7):
     for column, label in enumerate(labels):
-        make_button(panel, label, COLORS["scientific"], 10, row, column)
+        button = make_button(panel, label, COLORS["scientific"], 13, row, column)
+        if label == "DEG/RAD":
+            angle_button = button
+            button.configure(text=angle_mode.get())
 
 root.mainloop()
