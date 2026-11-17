@@ -6,6 +6,8 @@ root.geometry("460x800")
 root.resizable(False, False)
 root.configure(bg="#eef1f5")
 
+equation = tk.StringVar(root, value="")
+
 panel = tk.Frame(root, bg="#202938", padx=20, pady=20)
 panel.pack(padx=25, pady=20, fill="both", expand=True)
 
@@ -50,6 +52,90 @@ def restore_button_color(event):
     button.configure(bg=button.original_color, fg=button.original_text_color)
 
 
+def get_equation():
+    return equation.get()
+
+
+def last_operand_start(expression):
+    end = len(expression)
+    if not end:
+        return None
+
+    start = end - 1
+    if expression[start] == ")":
+        depth = 1
+        start -= 1
+        while start >= 0 and depth:
+            if expression[start] == ")":
+                depth += 1
+            elif expression[start] == "(":
+                depth -= 1
+            start -= 1
+        start += 1
+        while start > 0 and expression[start - 1].isalpha():
+            start -= 1
+    elif expression[start].isdigit() or expression[start] == ".":
+        while start > 0 and (expression[start - 1].isdigit() or expression[start - 1] == "."):
+            start -= 1
+    elif expression[start].isalpha():
+        while start > 0 and expression[start - 1].isalpha():
+            start -= 1
+    else:
+        return None
+    return start
+
+
+def append_factorial(expression):
+    start = last_operand_start(expression)
+    if start is None:
+        return expression + "factorial("
+
+    return expression[:start] + "factorial(" + expression[start:] + ")"
+
+
+def toggle_sign(expression):
+    start = last_operand_start(expression)
+    if start is None:
+        return expression + "-"
+    if start > 0 and expression[start - 1] == "-" and (
+        start == 1 or expression[start - 2] in "+-*/%("
+    ):
+        return expression[:start - 1] + expression[start:]
+    return expression[:start] + "-" + expression[start:]
+
+
+def show_button_press(label):
+    current = get_equation()
+    if label == "C":
+        current = ""
+    elif label == "DEL":
+        current = current[:-1]
+    elif label != "=":
+        if label == "±":
+            current = toggle_sign(current)
+        elif label == "!":
+            current = append_factorial(current)
+        else:
+            button_values = {
+                "÷": "/",
+                "×": "*",
+                "−": "-",
+                "sin": "sin(",
+                "cos": "cos(",
+                "tan": "tan(",
+                "log": "log10(",
+                "ln": "log(",
+                "√": "sqrt(",
+                "x²": "**2",
+                "xʸ": "**",
+                "π": "pi",
+            }
+            current += button_values.get(label, label)
+
+    equation.set(current)
+    result.configure(text=current or "0")
+
+
 for column in range(4):
     panel.grid_columnconfigure(column, weight=1)
 
@@ -73,6 +159,7 @@ for row in range(len(basic_buttons)):
             font=("Arial", 18),
             relief="flat",
             borderwidth=0,
+            command=lambda value=label: show_button_press(value),
         )
         button.grid(row=row + 1, column=column, padx=4, pady=3,
                     sticky="nsew", ipady=8)
@@ -99,6 +186,7 @@ for row in range(len(scientific_buttons)):
             font=("Arial", 14),
             relief="flat",
             borderwidth=0,
+            command=lambda value=label: show_button_press(value),
         )
         button.grid(row=row, column=column, padx=4, pady=3,
                     sticky="nsew", ipady=8)
