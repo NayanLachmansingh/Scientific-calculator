@@ -54,10 +54,10 @@ KEYS = {
     "rand": ("random(", "rand("), "round": ("round(", "round("),
 }
 
-panel = tk.Frame(root, bg=COLORS["panel"], padx=20, pady=20)
-panel.pack(padx=25, pady=20, fill="both", expand=True)
-display = tk.Frame(panel, bg="#f8fafc", height=120)
-display.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 18))
+panel = tk.Frame(root, bg=COLORS["panel"], padx=12, pady=10)
+panel.pack(padx=12, pady=10, fill="both", expand=True)
+display = tk.Frame(panel, bg="#f8fafc", height=100)
+display.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 8))
 display.grid_propagate(False)
 
 tk.Label(display, text="SCIENTIFIC CALCULATOR", bg="#f8fafc", fg="#64748b",
@@ -234,7 +234,7 @@ def make_button(parent, label, color, size, row, column):
         activeforeground="white", font=("Arial", size), relief="flat",
         borderwidth=0,
     )
-    button.grid(row=row, column=column, padx=4, pady=3, sticky="nsew", ipady=8)
+    button.grid(row=row, column=column, padx=2, pady=1, sticky="nsew", ipady=2)
     button.original_color = color
     button.bind("<Enter>", lambda event: event.widget.configure(bg=COLORS["hover"]))
     button.bind("<Leave>", lambda event, original=color: event.widget.configure(bg=original))
@@ -247,10 +247,12 @@ def toggle_angle():
 
 for column in range(4):
     panel.grid_columnconfigure(column, weight=1)
+for row in (*range(1, 6), *range(7, 18)):
+    panel.grid_rowconfigure(row, weight=1)
 for row, labels in enumerate(BASIC_BUTTONS, start=1):
     for column, label in enumerate(labels):
         color = "#18a879" if label == "=" else COLORS["operator"] if label in "÷×−+" else COLORS["button"]
-        make_button(panel, label, color, 18, row, column)
+        make_button(panel, label, color, 15, row, column)
 
 tk.Label(panel, text="SCIENTIFIC FUNCTIONS", bg=COLORS["panel"], fg="#e2e8f0",
          font=("Arial", 13), anchor="w").grid(
@@ -259,20 +261,8 @@ angle_button = tk.Button(panel, text=angle_mode.get(), command=toggle_angle,
                          bg=COLORS["operator"], fg="white", relief="flat")
 angle_button.grid(row=6, column=3, sticky="ew", padx=4, pady=(10, 4))
 
-area = tk.Frame(panel, bg=COLORS["panel"])
-area.grid(row=7, column=0, columnspan=4, sticky="nsew")
-canvas = tk.Canvas(area, bg=COLORS["panel"], highlightthickness=0, height=235)
-scrollbar = tk.Scrollbar(area, orient="vertical", command=canvas.yview)
-canvas.configure(yscrollcommand=scrollbar.set)
-scrollbar.pack(side="right", fill="y")
-canvas.pack(side="left", fill="both", expand=True)
-buttons = tk.Frame(canvas, bg=COLORS["panel"])
-window = canvas.create_window((0, 0), window=buttons, anchor="nw")
-buttons.bind("<Configure>", lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
-canvas.bind("<Configure>", lambda event: canvas.itemconfigure(window, width=event.width))
-
-for row, labels in enumerate(SCIENTIFIC_BUTTONS):
+for row, labels in enumerate(SCIENTIFIC_BUTTONS, start=7):
     for column, label in enumerate(labels):
-        make_button(buttons, label, COLORS["scientific"], 12, row, column)
+        make_button(panel, label, COLORS["scientific"], 10, row, column)
 
 root.mainloop()
