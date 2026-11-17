@@ -7,6 +7,8 @@ root.resizable(False, False)
 root.configure(bg="#eef1f5")
 
 equation = tk.StringVar(root, value="")
+screen_expression = tk.StringVar(root, value="0")
+equation_history = []
 
 panel = tk.Frame(root, bg="#202938", padx=20, pady=20)
 panel.pack(padx=25, pady=20, fill="both", expand=True)
@@ -19,7 +21,7 @@ title = tk.Label(display, text="CALCULATOR", bg="#f8fafc", fg="#64748b",
                  font=("Arial", 16), anchor="w")
 title.pack(fill="x", padx=20, pady=(14, 0))
 
-result = tk.Label(display, text="0", bg="#f8fafc", fg="#172033",
+result = tk.Label(display, textvariable=screen_expression, bg="#f8fafc", fg="#172033",
                   font=("Arial", 24), anchor="w")
 result.pack(fill="x", padx=20, pady=8)
 
@@ -93,28 +95,49 @@ def append_factorial(expression):
     return expression[:start] + "factorial(" + expression[start:] + ")"
 
 
-def toggle_sign(expression):
+def toggle_sign(expression, sign="-"):
     start = last_operand_start(expression)
     if start is None:
-        return expression + "-"
-    if start > 0 and expression[start - 1] == "-" and (
-        start == 1 or expression[start - 2] in "+-*/%("
+        return expression + sign
+    if start > 0 and expression[start - 1] == sign and (
+        start == 1 or expression[start - 2] in "+-*/%×÷−("
     ):
         return expression[:start - 1] + expression[start:]
-    return expression[:start] + "-" + expression[start:]
+    return expression[:start] + sign + expression[start:]
 
 
 def show_button_press(label):
     current = get_equation()
+    shown = screen_expression.get()
+    if not current:
+        shown = ""
+
     if label == "C":
         current = ""
+        shown = ""
+        equation_history.clear()
     elif label == "DEL":
-        current = current[:-1]
+        if equation_history:
+            current, shown = equation_history.pop()
+        else:
+            current = ""
+            shown = ""
     elif label != "=":
+        equation_history.append((current, shown))
         if label == "±":
             current = toggle_sign(current)
+            shown = toggle_sign(shown, "−")
         elif label == "!":
             current = append_factorial(current)
+            shown += "!"
+        elif label == "x²":
+            if last_operand_start(current) is not None:
+                current += "**2"
+                shown += "²"
+        elif label == "xʸ":
+            if last_operand_start(current) is not None:
+                current += "**"
+                shown += "^"
         else:
             button_values = {
                 "÷": "/",
@@ -126,14 +149,13 @@ def show_button_press(label):
                 "log": "log10(",
                 "ln": "log(",
                 "√": "sqrt(",
-                "x²": "**2",
-                "xʸ": "**",
                 "π": "pi",
             }
             current += button_values.get(label, label)
+            shown += label
 
     equation.set(current)
-    result.configure(text=current or "0")
+    screen_expression.set(shown or "0")
 
 
 for column in range(4):
